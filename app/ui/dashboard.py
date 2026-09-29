@@ -21,6 +21,7 @@ from app.patterns.engine import analyze  # noqa: E402
 from app.output.csv_store import DEFAULT_PATH as SIGNALS_CSV_PATH  # noqa: E402
 from app.output.formatting import format_message  # noqa: E402
 from app.output.telegram_notifier import send_message  # noqa: E402
+from app.risk.service import get_risk_plan  # noqa: E402
 from app.scheduler.session import is_active_session  # noqa: E402
 
 st.set_page_config(page_title="Gold Signal System — Setup", layout="centered")
@@ -170,6 +171,28 @@ if st.button("Run backtest (last 500 candles)"):
             st.dataframe([r.to_dict() for r in results], use_container_width=True)
     except Exception as exc:  # noqa: BLE001
         st.error(f"Could not run backtest: {exc}")
+
+st.subheader("Phase 8 — Risk management (stop-loss / take-profit)")
+st.caption(
+    "No account size used — shows %-risk only (see README). "
+    "Direction is picked manually here since Phase 4 is credit-blocked; "
+    "the scheduler (Phase 5) wires this to the real Claude signal automatically."
+)
+
+_direction = st.selectbox("Signal direction (example)", ["BUY", "SELL"])
+if st.button("Compute risk plan"):
+    try:
+        candles = get_candles(active_env, output_size=50)
+        snapshot = analyze(candles)
+        example_signal = TradeSignal(signal=_direction, confidence=70, reason="Dashboard example")
+        plan = get_risk_plan(active_env, example_signal, snapshot)
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Entry", plan.entry)
+        col2.metric("Stop-loss", plan.stop_loss)
+        col3.metric("Take-profit", plan.take_profit)
+        st.caption(f"Risk: {plan.risk_percent}% of capital — risk:reward 1:{plan.reward_risk_ratio}")
+    except Exception as exc:  # noqa: BLE001
+        st.error(f"Could not compute risk plan: {exc}")
 
 st.subheader("Roadmap")
 for phase, desc, status in PHASES:

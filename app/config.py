@@ -27,4 +27,8 @@ def load_config(env_name: str | None = None) -> dict:
     cfg["TIMEFRAME"] = os.getenv("TIMEFRAME", "15min")
     cfg["POLL_INTERVAL_ACTIVE_MIN"] = int(os.getenv("POLL_INTERVAL_ACTIVE_MIN", "15"))
     cfg["POLL_INTERVAL_IDLE_MIN"] = int(os.getenv("POLL_INTERVAL_IDLE_MIN", "60"))
+    # Phase 8 — risk management defaults (no account size, %-risk only; see README)
+    cfg["RISK_PER_TRADE_PCT"] = float(os.getenv("RISK_PER_TRADE_PCT", "1.0"))
+    cfg["ATR_STOP_MULTIPLIER"] = float(os.getenv("ATR_STOP_MULTIPLIER", "2.0"))
+    cfg["REWARD_RISK_RATIO"] = float(os.getenv("REWARD_RISK_RATIO", "1.5"))
     return cfg

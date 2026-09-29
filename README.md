@@ -25,8 +25,8 @@ Har phase ek fixed JSON schema output karta hai, agla phase sirf usko consume ka
 | 4 | Claude Decision Layer | Phase 2+3 ka summary Claude ko bhej ke BUY/SELL/HOLD signal lena | `ANTHROPIC_API_KEY` |
 | 5 | Scheduler | Phase 1→4 ko cron/loop se automatic chalana | decide: local machine ya server/VPS pe chalega |
 | 6 | Output & Logging | Signal store (CSV) + notify (Telegram/console) | (optional) `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` |
-| 7 (future) | Backtesting | Pattern/volume thresholds ko historical data pe tune karna | zyada historical data range (same Phase 1 provider) |
-| 8 (future) | Risk Management | Stop-loss/take-profit, position sizing | aapka risk tolerance / account size |
+| 7 | Backtesting | Pattern detection ko historical data pe test karke hit-rate nikalna (no Claude call) | kuch nahi |
+| 8 | Risk Management | Stop-loss/take-profit (ATR-based) + %-risk per trade | kuch nahi (defaults hain, `.env` me override kar sakte ho) |
 | 9 (future) | Broker Execution | Signal ko real order me convert (sirf agar chaho) | broker API keys + har trade ki manual confirmation |
 
 ## Free API Keys — kahan se milenge
@@ -58,6 +58,15 @@ Har phase ek fixed JSON schema output karta hai, agla phase sirf usko consume ka
 - `.env.example` — template, git me committed rehta hai (koi real key nahi)
 - `.env.development` / `.env.stage` / `.env.prod` — inme real keys dalo, ye gitignored hain (kabhi commit nahi honge)
 - Local run ke liye `.env.development` use hoga; jab live/paisa-wala mode chalega tab `.env.prod`
+
+## Phase 8 — risk management defaults
+
+Koi account size nahi use hoti (privacy/simplicity ke liye) — sirf %-risk aur price levels dikhte hain:
+- `RISK_PER_TRADE_PCT=1.0` — har trade pe capital ka kitna % risk karna hai
+- `ATR_STOP_MULTIPLIER=2.0` — stop-loss = entry se 2x ATR door
+- `REWARD_RISK_RATIO=1.5` — take-profit = stop-distance ka 1.5x (risk:reward 1:1.5)
+
+Teeno `.env.<environment>` me override ho sakte hain, code me defaults hain isliye set karna zaroori nahi.
 
 ## Code Standards (Phase 0 se follow karna hai, har phase me)
 

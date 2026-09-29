@@ -1,4 +1,5 @@
-"""Phase 5 — runs Phase 1-4 on a loop, and Phase 6 (log + notify) after each signal.
+"""Phase 5 — runs Phase 1-4 on a loop, Phase 8 (risk plan) + Phase 6 (log + notify)
+after each signal.
 
 Usage:
   python -m app.scheduler.runner [env_name]           # loop forever
@@ -10,17 +11,21 @@ import time
 from datetime import datetime, timezone
 
 from app.config import load_config
-from app.decision.service import get_trade_signal
+from app.decision.service import get_trade_signal_with_snapshot
 from app.output.service import record_signal
+from app.risk.service import get_risk_plan
 from app.scheduler.session import is_active_session
 
 
 def run_once(env_name: str = None) -> None:
     now = datetime.now(timezone.utc).isoformat()
     try:
-        signal = get_trade_signal(env_name)
-        record_signal(env_name, signal)
+        signal, snapshot = get_trade_signal_with_snapshot(env_name)
+        risk_plan = get_risk_plan(env_name, signal, snapshot)
+        record_signal(env_name, signal, risk_plan=risk_plan)
         print(f"[{now}] {signal.signal} (confidence {signal.confidence}) — {signal.reason}")
+        if risk_plan:
+            print(f"  entry {risk_plan.entry} | SL {risk_plan.stop_loss} | TP {risk_plan.take_profit}")
     except Exception as exc:  # noqa: BLE001 — one bad tick must not kill the loop
         print(f"[{now}] ERROR: {exc}")
 

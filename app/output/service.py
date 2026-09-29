@@ -8,15 +8,16 @@ from app.decision.models import TradeSignal
 from app.output.csv_store import append_signal
 from app.output.formatting import format_message
 from app.output.telegram_notifier import send_message
+from app.risk.models import RiskPlan
 
 
-def record_signal(env_name: Optional[str], signal: TradeSignal) -> None:
+def record_signal(env_name: Optional[str], signal: TradeSignal, risk_plan: Optional[RiskPlan] = None) -> None:
     cfg = load_config(env_name)
     timestamp = datetime.now(timezone.utc).isoformat()
 
-    append_signal(timestamp, signal)
+    append_signal(timestamp, signal, risk_plan=risk_plan)
 
     bot_token = cfg["TELEGRAM_BOT_TOKEN"]
     chat_id = cfg["TELEGRAM_CHAT_ID"]
     if bot_token and chat_id:
-        send_message(bot_token, chat_id, format_message(signal, cfg["SYMBOL"]))
+        send_message(bot_token, chat_id, format_message(signal, cfg["SYMBOL"], risk_plan=risk_plan))

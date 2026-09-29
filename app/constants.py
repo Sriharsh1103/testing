@@ -23,4 +23,5 @@ PHASES = [
     ("Phase 5", "Scheduler", "pending"),
     ("Phase 6", "Output & Logging (Telegram/console)", "done"),
     ("Phase 7", "Pattern Backtest (historical hit-rate)", "done"),
+    ("Phase 8", "Risk Management (stop-loss / take-profit)", "done"),
 ]

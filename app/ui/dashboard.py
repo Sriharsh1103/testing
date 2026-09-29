@@ -11,6 +11,7 @@ sys.path.insert(0, str(ROOT))
 from app.config import env_file_for  # noqa: E402
 from app.constants import ENVS, PHASES, REQUIRED_KEYS, OPTIONAL_KEYS  # noqa: E402
 from app.data.service import get_candles  # noqa: E402
+from app.decision.service import get_trade_signal  # noqa: E402
 from app.helpers import mask_secret  # noqa: E402
 from app.news.service import get_headlines  # noqa: E402
 from app.patterns.engine import analyze  # noqa: E402
@@ -99,6 +100,18 @@ if st.button("Fetch latest news"):
             st.write(f"- **{h.headline}** — {h.source} ({h.datetime})")
     except Exception as exc:  # noqa: BLE001 — surface any fetch/config error to the UI
         st.error(f"Could not fetch news: {exc}")
+
+st.subheader("Phase 4 — Claude trade signal")
+st.caption("Combines Phase 2 + Phase 3 output, calls Claude (claude-haiku-4-5) once")
+
+if st.button("Get trade signal"):
+    try:
+        signal = get_trade_signal(active_env)
+        color = {"BUY": "success", "SELL": "error", "HOLD": "warning"}.get(signal.signal, "info")
+        getattr(st, color)(f"**{signal.signal}** — confidence {signal.confidence}%")
+        st.write(signal.reason)
+    except Exception as exc:  # noqa: BLE001 — surface any fetch/config/API error to the UI
+        st.error(f"Could not get signal: {exc}")
 
 st.subheader("Roadmap")
 for phase, desc, status in PHASES:

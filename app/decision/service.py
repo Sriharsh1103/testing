@@ -6,6 +6,7 @@ This is what Phase 5 (scheduler) will call on each tick.
 from typing import Optional, Tuple
 
 from app.config import load_config
+from app.data.models import Candle
 from app.data.service import get_candles
 from app.decision.claude_client import get_signal
 from app.decision.models import TradeSignal
@@ -15,9 +16,12 @@ from app.patterns.engine import analyze
 from app.patterns.models import MarketSnapshot
 
 
-def get_trade_signal_with_snapshot(env_name: Optional[str] = None) -> Tuple[TradeSignal, MarketSnapshot]:
-    """Like get_trade_signal, but also returns the MarketSnapshot — Phase 8 needs
-    the entry price and ATR from it to compute stop-loss/take-profit."""
+def get_trade_signal_with_snapshot(
+    env_name: Optional[str] = None,
+) -> Tuple[TradeSignal, MarketSnapshot, Candle]:
+    """Like get_trade_signal, but also returns the MarketSnapshot (Phase 8 needs
+    entry price + ATR for stop-loss/take-profit) and the latest candle (the
+    paper-trading ledger needs its high/low, without a second data fetch)."""
     cfg = load_config(env_name)
     api_key = cfg["ANTHROPIC_API_KEY"]
     if not api_key:
@@ -35,9 +39,9 @@ def get_trade_signal_with_snapshot(env_name: Optional[str] = None) -> Tuple[Trad
         confidence=result["confidence"],
         reason=result["reason"],
     )
-    return signal, snapshot
+    return signal, snapshot, candles[-1]
 
 
 def get_trade_signal(env_name: Optional[str] = None) -> TradeSignal:
-    signal, _snapshot = get_trade_signal_with_snapshot(env_name)
+    signal, _snapshot, _candle = get_trade_signal_with_snapshot(env_name)
     return signal

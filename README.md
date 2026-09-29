@@ -27,7 +27,7 @@ Har phase ek fixed JSON schema output karta hai, agla phase sirf usko consume ka
 | 6 | Output & Logging | Signal store (CSV) + notify (Telegram/console) | (optional) `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` |
 | 7 | Backtesting | Pattern detection ko historical data pe test karke hit-rate nikalna (no Claude call) | kuch nahi |
 | 8 | Risk Management | Stop-loss/take-profit (ATR-based) + %-risk per trade | kuch nahi (defaults hain, `.env` me override kar sakte ho) |
-| 9 (future) | Broker Execution | Signal ko real order me convert (sirf agar chaho) | broker API keys + har trade ki manual confirmation |
+| 9 (on hold) | Broker Execution | Signal ko real order me convert (sirf agar chaho) | broker API keys + har trade ki manual confirmation |
 
 ## Free API Keys — kahan se milenge
 
@@ -68,13 +68,43 @@ Koi account size nahi use hoti (privacy/simplicity ke liye) — sirf %-risk aur 
 
 Teeno `.env.<environment>` me override ho sakte hain, code me defaults hain isliye set karna zaroori nahi.
 
+## Fully automatic mode (scheduler + Telegram + paper trading)
+
+Sirf dashboard khol ke rakhne se signals automatic nahi generate hote — dashboard sirf **preview** hai. Asli automatic pipeline ye standalone process hai:
+
+```bash
+python -m app.scheduler.runner development
+```
+
+Isko background me chalne do (nohup/screen/tmux/systemd — jo bhi aapke server pe standard ho). Har 5 min (`POLL_INTERVAL_ACTIVE_MIN`/`POLL_INTERVAL_IDLE_MIN`, dono default 5) pe:
+1. Price + pattern + news + Claude signal generate hota hai
+2. CSV log + Telegram message (entry/SL/TP ke saath) automatic jata hai
+3. Paper-trading ledger update hota hai (naya trade khulta hai agar position khali hai, ya SL/TP hit check hota hai agar khula hua hai)
+
+**Sirf yahi process** CSV/Telegram/paper-ledger ko likhta hai — dashboard ka "Home" page sirf **read-only preview** dikhata hai (apna khud ka cached Claude call, jo kabhi log/notify nahi karta), taaki dashboard khula rakhne se duplicate trades/messages na ho.
+
+**Trade style** (Scalping/Intraday/Swing) Home page se select karo — turant `.env` me save hota hai, scheduler agli tick pe automatically naya timeframe use karega (restart ki zaroorat nahi, har tick pe config fresh read hota hai).
+
+**Paper trading balance** — "Trading settings" me initial amount daalo, "Reset paper account" se kabhi bhi restart kar sakte ho. Real paisa/order kahi involve nahi hai, sirf simulated tracking hai.
+
+**Abhi ka status:** Claude credits na hone ki wajah se scheduler har tick pe error print karta hai (crash nahi hota, Telegram bhi nahi jata jab tak error hai) — credits add hote hi automatically kaam karna shuru kar dega, kuch restart nahi karna padega.
+
+## Dashboard layout
+
+`./run.sh` khol ke sidebar me 3 sections milenge:
+- **Home** — live trading view (price chart, pattern, news, Claude signal, risk plan, backtest) — sab automatic load hota hai, koi manual "fetch" button nahi. "Auto-refresh" checkbox se har 30s page refresh hoga.
+- **Environment** — `View` tab (masked key status) + `Secrets (edit)` tab (values edit karke seedha `.env.<environment>` file me save kar sakte ho)
+- **Phases** — sabhi phases ka status table (kya karta hai, done/pending/on-hold, kya pending hai)
+
+**Auto-refresh safe kyun hai:** UI har 30s refresh hoti hai lekin asli API/Claude calls `app/ui/cache.py` me cache hote hain (candles 5min, news 10min, Claude signal 15min) — isliye baar-baar refresh karne se paisa/quota nahi udhta, sirf cache se dikhta rehta hai.
+
 ## Code Standards (Phase 0 se follow karna hai, har phase me)
 
 - **Max ~500-600 lines per file.** Isse zyada ho raha ho toh file split karo.
 - **Common/reusable logic ek jagah:** `app/helpers.py` (reusable functions jaise masking, formatting) aur `app/constants.py` (shared data jaise key lists, phase list) — 2+ jagah use hone wala code yahi jaayega, koi bhi file me duplicate nahi hoga.
-- **Ek file = ek responsibility:** `config.py` sirf env loading karta hai, `main.py` sirf CLI entrypoint hai, `ui/dashboard.py` sirf UI render karta hai. Business logic (Phase 1 onwards: data fetch, pattern detection, Claude call) apni alag file/module me jayega, UI/CLI files me nahi.
+- **Ek file = ek responsibility:** `config.py` sirf env loading karta hai, `main.py` sirf CLI entrypoint hai, `ui/dashboard.py` sirf sidebar navigation hai (`ui/home.py`, `ui/environment.py`, `ui/phases.py` — har page apni file me). Business logic (Phase 1 onwards: data fetch, pattern detection, Claude call) apni alag file/module me jayega, UI/CLI files me nahi.
 - Naya phase start hote hi uska code apne alag file/folder me jayega (e.g. `app/data/`, `app/patterns/`, `app/news/`, `app/decision/`), purani files ko touch kiye bina.
 
 ## Ab kya karna hai
 
-Batao Phase 1 se kitne tak abhi build karna hai (suggestion: Phase 1-6 = ek working MVP), aur upar wali table me jo keys chahiye woh `.env.development` me daal do — code likhna shuru karte hain.
+Sab phases (0-8) ban chuke hain, Phase 9 hold pe hai. Sirf **Anthropic API credits** add karne baaki hain (console.anthropic.com → Plans & Billing) — uske baad scheduler automatically real signals generate karna, Telegram bhejna, aur paper-trading track karna shuru kar dega, kuch aur karna nahi padega.

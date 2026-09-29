@@ -22,4 +22,5 @@ PHASES = [
     ("Phase 4", "Claude Decision Layer", "pending"),
     ("Phase 5", "Scheduler", "pending"),
     ("Phase 6", "Output & Logging (Telegram/console)", "done"),
+    ("Phase 7", "Pattern Backtest (historical hit-rate)", "done"),
 ]

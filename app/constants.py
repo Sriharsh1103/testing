@@ -18,7 +18,7 @@ PHASES = [
     ("Phase 0", "Setup (.env files, project skeleton, dashboard)", "done"),
     ("Phase 1", "Data Ingestion — price (Twelve Data)", "done"),
     ("Phase 2", "Pattern & Volume Engine (local)", "done"),
-    ("Phase 3", "News Ingestion (Finnhub)", "pending"),
+    ("Phase 3", "News Ingestion (Finnhub)", "done"),
     ("Phase 4", "Claude Decision Layer", "pending"),
     ("Phase 5", "Scheduler", "pending"),
     ("Phase 6", "Output & Logging (Telegram/console)", "pending"),

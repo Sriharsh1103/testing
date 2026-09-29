@@ -12,6 +12,7 @@ from app.config import env_file_for  # noqa: E402
 from app.constants import ENVS, PHASES, REQUIRED_KEYS, OPTIONAL_KEYS  # noqa: E402
 from app.data.service import get_candles  # noqa: E402
 from app.helpers import mask_secret  # noqa: E402
+from app.news.service import get_headlines  # noqa: E402
 from app.patterns.engine import analyze  # noqa: E402
 
 st.set_page_config(page_title="Gold Signal System — Setup", layout="centered")
@@ -86,6 +87,18 @@ if st.button("Analyze latest data"):
         st.write(f"Volatility (volume proxy): **{vol['label']}** — ratio {vol['ratio']} (ATR {vol['atr']})")
     except Exception as exc:  # noqa: BLE001 — surface any fetch/config error to the UI
         st.error(f"Could not analyze: {exc}")
+
+st.subheader("Phase 3 — News headlines")
+st.caption("Manual fetch (won't auto-run on every page load, to save API quota)")
+
+if st.button("Fetch latest news"):
+    try:
+        headlines = get_headlines(active_env)
+        st.success(f"Fetched {len(headlines)} relevant headlines")
+        for h in headlines:
+            st.write(f"- **{h.headline}** — {h.source} ({h.datetime})")
+    except Exception as exc:  # noqa: BLE001 — surface any fetch/config error to the UI
+        st.error(f"Could not fetch news: {exc}")
 
 st.subheader("Roadmap")
 for phase, desc, status in PHASES:

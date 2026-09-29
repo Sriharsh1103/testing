@@ -25,4 +25,6 @@ def load_config(env_name: str | None = None) -> dict:
         cfg[key] = os.getenv(key, "")
     cfg["SYMBOL"] = os.getenv("SYMBOL", "XAU/USD")
     cfg["TIMEFRAME"] = os.getenv("TIMEFRAME", "15min")
+    cfg["POLL_INTERVAL_ACTIVE_MIN"] = int(os.getenv("POLL_INTERVAL_ACTIVE_MIN", "15"))
+    cfg["POLL_INTERVAL_IDLE_MIN"] = int(os.getenv("POLL_INTERVAL_IDLE_MIN", "60"))
     return cfg

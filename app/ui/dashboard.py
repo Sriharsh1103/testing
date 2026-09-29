@@ -8,13 +8,14 @@ from dotenv import dotenv_values
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from app.config import env_file_for  # noqa: E402
+from app.config import env_file_for, load_config  # noqa: E402
 from app.constants import ENVS, PHASES, REQUIRED_KEYS, OPTIONAL_KEYS  # noqa: E402
 from app.data.service import get_candles  # noqa: E402
 from app.decision.service import get_trade_signal  # noqa: E402
 from app.helpers import mask_secret  # noqa: E402
 from app.news.service import get_headlines  # noqa: E402
 from app.patterns.engine import analyze  # noqa: E402
+from app.scheduler.session import is_active_session  # noqa: E402
 
 st.set_page_config(page_title="Gold Signal System — Setup", layout="centered")
 
@@ -112,6 +113,19 @@ if st.button("Get trade signal"):
         st.write(signal.reason)
     except Exception as exc:  # noqa: BLE001 — surface any fetch/config/API error to the UI
         st.error(f"Could not get signal: {exc}")
+
+st.subheader("Phase 5 — Scheduler status")
+try:
+    _cfg = load_config(active_env)
+    _active = is_active_session()
+    _interval = _cfg["POLL_INTERVAL_ACTIVE_MIN"] if _active else _cfg["POLL_INTERVAL_IDLE_MIN"]
+    st.write(
+        f"Session: **{'active (London-NY overlap)' if _active else 'idle'}** — "
+        f"polling every **{_interval} min**"
+    )
+    st.caption("Run the actual loop separately: `python -m app.scheduler.runner " + active_env + "`")
+except Exception as exc:  # noqa: BLE001
+    st.error(f"Could not read scheduler config: {exc}")
 
 st.subheader("Roadmap")
 for phase, desc, status in PHASES:

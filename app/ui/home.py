@@ -22,7 +22,7 @@ from app.risk.models import RiskPlan
 from app.output.csv_store import DEFAULT_PATH as SIGNALS_CSV_PATH
 from app.output.formatting import format_message
 from app.output.telegram_notifier import send_message
-from app.paper import storage as paper_storage
+from app.paper import journal, storage as paper_storage
 from app.patterns.engine import analyze
 from app.risk.service import get_risk_plan
 from app.scheduler.session import is_active_session
@@ -148,6 +148,32 @@ def _render_paper_ledger(active_env: str, cfg: dict):
         st.caption("No open position.")
 
 
+def _render_trade_journal():
+    st.markdown("### Trade journal (learning data)")
+    st.caption("One row per closed trade — pattern, confidence, and outcome, for future analysis.")
+    if not journal.DEFAULT_PATH.exists():
+        st.caption("No trades closed yet — nothing to learn from until the scheduler closes its first one.")
+        return
+
+    with journal.DEFAULT_PATH.open(newline="", encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    st.dataframe(rows[-20:], use_container_width=True, hide_index=True)
+
+    by_pattern: dict = {}
+    for r in rows:
+        p = r["pattern"] or "(none)"
+        by_pattern.setdefault(p, {"count": 0, "wins": 0})
+        by_pattern[p]["count"] += 1
+        if r["outcome"] == "TP":
+            by_pattern[p]["wins"] += 1
+    if by_pattern:
+        summary = [
+            {"Pattern": p, "Trades": v["count"], "Win rate": f"{round(v['wins'] / v['count'] * 100, 1)}%"}
+            for p, v in by_pattern.items()
+        ]
+        st.dataframe(summary, use_container_width=True, hide_index=True)
+
+
 def _render_backtest(active_env: str):
     st.markdown("### Pattern backtest (historical hit-rate)")
     try:
@@ -211,6 +237,7 @@ def render(active_env: str) -> None:
     _render_news(active_env)
     _render_signal_and_risk(active_env, cfg)
     _render_paper_ledger(active_env, cfg)
+    _render_trade_journal()
     _render_backtest(active_env)
     _render_output_log(active_env, cfg)
 

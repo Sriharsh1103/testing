@@ -50,7 +50,7 @@ def run_once(env_name: str = None) -> None:
         if risk_plan:
             print(f"  entry {risk_plan.entry} | SL {risk_plan.stop_loss} | TP {risk_plan.take_profit}")
 
-        ledger_state, outcome = update_ledger(env_name, signal, risk_plan, last_candle)
+        ledger_state, outcome = update_ledger(env_name, signal, risk_plan, snapshot, last_candle)
         if outcome:
             print(f"  paper trade closed: {outcome} -> balance {ledger_state.balance:.2f}")
             bot_token, chat_id = cfg["TELEGRAM_BOT_TOKEN"], cfg["TELEGRAM_CHAT_ID"]

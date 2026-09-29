@@ -14,7 +14,13 @@ from app.paper.models import LedgerState, Position
 from app.risk.models import RiskPlan
 
 
-def open_position(state: LedgerState, signal: TradeSignal, plan: RiskPlan, timestamp: str) -> LedgerState:
+def open_position(
+    state: LedgerState,
+    signal: TradeSignal,
+    plan: RiskPlan,
+    timestamp: str,
+    pattern_name: Optional[str] = None,
+) -> LedgerState:
     if state.position is not None or signal.signal not in ("BUY", "SELL"):
         return state
 
@@ -27,6 +33,8 @@ def open_position(state: LedgerState, signal: TradeSignal, plan: RiskPlan, times
         risk_percent=plan.risk_percent,
         reward_risk_ratio=plan.reward_risk_ratio,
         opened_at=timestamp,
+        pattern_name=pattern_name,
+        confidence=signal.confidence,
     )
     return LedgerState(
         balance=state.balance, position=position, trade_count=state.trade_count, win_count=state.win_count

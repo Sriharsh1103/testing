@@ -14,6 +14,8 @@ class Position:
     risk_percent: float
     reward_risk_ratio: float
     opened_at: str
+    pattern_name: Optional[str] = None  # what triggered this trade — for the journal
+    confidence: int = 0
 
 
 @dataclass

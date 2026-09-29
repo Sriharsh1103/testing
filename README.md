@@ -89,6 +89,12 @@ Isko background me chalne do (nohup/screen/tmux/systemd — jo bhi aapke server 
 
 **Abhi ka status:** Claude credits na hone ki wajah se scheduler har tick pe error print karta hai (crash nahi hota, Telegram bhi nahi jata jab tak error hai) — credits add hote hi automatically kaam karna shuru kar dega, kuch restart nahi karna padega.
 
+## Trade journal — "learning data"
+
+Paper-ledger sirf current state rakhta hai (balance, open position) — **har closed trade ka poora record** alag se `data/trade_journal.csv` me save hota hai: kaunsa pattern tha, kitna confidence tha, entry/SL/TP, outcome (TP/SL), aur P&L. Ye future me analyze karne ke liye hai — kaunsa pattern/confidence combo actually kaam kar raha hai, taaki thresholds (Phase 2) ya risk settings (Phase 8) ko tune kiya ja sake. Home page pe "Trade journal" section me recent trades + per-pattern win-rate dikhta hai.
+
+Abhi tak koi trade close nahi hua (Claude credits pending hone ki wajah se koi signal hi nahi bana) — jaise hi real trades close honge, ye data apne aap accumulate hoga.
+
 ## Dashboard layout
 
 `./run.sh` khol ke sidebar me 3 sections milenge:

@@ -16,8 +16,8 @@ ENVS = ["development", "stage", "prod"]
 # (phase_label, description, status) — status: "done" | "pending"
 PHASES = [
     ("Phase 0", "Setup (.env files, project skeleton, dashboard)", "done"),
-    ("Phase 1", "Data Ingestion — price + volume (Twelve Data)", "pending"),
-    ("Phase 2", "Pattern & Volume Engine (local)", "pending"),
+    ("Phase 1", "Data Ingestion — price (Twelve Data)", "done"),
+    ("Phase 2", "Pattern & Volume Engine (local)", "done"),
     ("Phase 3", "News Ingestion (Finnhub)", "pending"),
     ("Phase 4", "Claude Decision Layer", "pending"),
     ("Phase 5", "Scheduler", "pending"),

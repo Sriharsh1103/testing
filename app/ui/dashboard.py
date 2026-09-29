@@ -10,7 +10,9 @@ sys.path.insert(0, str(ROOT))
 
 from app.config import env_file_for  # noqa: E402
 from app.constants import ENVS, PHASES, REQUIRED_KEYS, OPTIONAL_KEYS  # noqa: E402
+from app.data.service import get_candles  # noqa: E402
 from app.helpers import mask_secret  # noqa: E402
+from app.patterns.engine import analyze  # noqa: E402
 
 st.set_page_config(page_title="Gold Signal System — Setup", layout="centered")
 
@@ -45,6 +47,45 @@ for env_name in ENVS:
         values = dotenv_values(env_path)
         render_key_group("Required", REQUIRED_KEYS, values, required=True)
         render_key_group("Optional", OPTIONAL_KEYS, values, required=False)
+
+st.subheader("Phase 1 — Live price data")
+st.caption("Manual fetch (won't auto-run on every page load, to save API quota)")
+
+if st.button("Fetch latest candles"):
+    try:
+        candles = get_candles(active_env, output_size=20)
+        rows = [c.to_dict() for c in candles]
+        st.success(f"Fetched {len(rows)} candles for {active_env}")
+        st.dataframe(rows, use_container_width=True)
+        st.line_chart({"close": [r["close"] for r in rows]})
+        if all(r["volume"] == 0 for r in rows):
+            st.caption("Volume is 0 for all candles — expected for XAU/USD (OTC market), Phase 2 uses a volatility proxy instead.")
+    except Exception as exc:  # noqa: BLE001 — surface any fetch/config error to the UI
+        st.error(f"Could not fetch candles: {exc}")
+
+st.subheader("Phase 2 — Pattern & volatility analysis")
+st.caption("Local computation only, no API call — runs on the last 50 candles")
+
+if st.button("Analyze latest data"):
+    try:
+        candles = get_candles(active_env, output_size=50)
+        snapshot = analyze(candles).to_dict()
+
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Last close", snapshot["last_close"])
+        col2.metric("Support", snapshot["support"])
+        col3.metric("Resistance", snapshot["resistance"])
+
+        pattern = snapshot["pattern"]
+        if pattern:
+            st.success(f"Pattern: **{pattern['name']}** ({pattern['bias']})")
+        else:
+            st.caption("Pattern: none detected on the latest candle")
+
+        vol = snapshot["volatility"]
+        st.write(f"Volatility (volume proxy): **{vol['label']}** — ratio {vol['ratio']} (ATR {vol['atr']})")
+    except Exception as exc:  # noqa: BLE001 — surface any fetch/config error to the UI
+        st.error(f"Could not analyze: {exc}")
 
 st.subheader("Roadmap")
 for phase, desc, status in PHASES:

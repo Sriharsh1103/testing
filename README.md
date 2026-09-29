@@ -19,7 +19,7 @@ Har phase ek fixed JSON schema output karta hai, agla phase sirf usko consume ka
 | # | Phase | Kaam | Aapko kya dena hoga |
 |---|---|---|---|
 | 0 | Setup | `.env` files, project structure, logging | kuch nahi (is step me ho gaya) |
-| 1 | Data Ingestion | XAU/USD OHLCV (price+volume) fetch — historical + live | `TWELVE_DATA_API_KEY` |
+| 1 | Data Ingestion | XAU/USD OHLC (price) fetch — historical + live | `TWELVE_DATA_API_KEY` |
 | 2 | Pattern & Volume Engine | Candlestick pattern + support/resistance + volume-spike ratio (local logic, no API) | kuch nahi |
 | 3 | News Ingestion | Gold/USD/Fed related latest headlines | `FINNHUB_API_KEY` |
 | 4 | Claude Decision Layer | Phase 2+3 ka summary Claude ko bhej ke BUY/SELL/HOLD signal lena | `ANTHROPIC_API_KEY` |
@@ -31,11 +31,12 @@ Har phase ek fixed JSON schema output karta hai, agla phase sirf usko consume ka
 
 ## Free API Keys — kahan se milenge
 
-### 1. Price + Volume data → Twelve Data
+### 1. Price data → Twelve Data
 - URL: https://twelvedata.com
 - Free tier: ~800 requests/day, XAU/USD (gold) forex pair supported, intraday candles milte hain
 - No credit card required signup ke liye
 - Signup karke "API Key" dashboard se copy karo → `.env.development` me `TWELVE_DATA_API_KEY=` ke aage paste karo
+- **Volume note:** gold/forex OTC market hai — Twelve Data isme `volume: 0` deta hai (OANDA jaisa broker real tick-volume deta, lekin OANDA India me register nahi hota — RBI/FEMA restriction). Isliye Phase 2 me real volume ki jagah **volatility-based proxy** (candle range / ATR — jitna bada price move utna zyada "activity") use karenge. Koi naya signup nahi chahiye iske liye.
 
 ### 2. News headlines → Finnhub
 - URL: https://finnhub.io

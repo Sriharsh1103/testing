@@ -1,5 +1,4 @@
-"""Phase 5 — runs Phase 1-4 on a loop. Output/storage is Phase 6's job; this just
-prints each tick so it's useful stand-alone in the meantime.
+"""Phase 5 — runs Phase 1-4 on a loop, and Phase 6 (log + notify) after each signal.
 
 Usage:
   python -m app.scheduler.runner [env_name]           # loop forever
@@ -12,6 +11,7 @@ from datetime import datetime, timezone
 
 from app.config import load_config
 from app.decision.service import get_trade_signal
+from app.output.service import record_signal
 from app.scheduler.session import is_active_session
 
 
@@ -19,6 +19,7 @@ def run_once(env_name: str = None) -> None:
     now = datetime.now(timezone.utc).isoformat()
     try:
         signal = get_trade_signal(env_name)
+        record_signal(env_name, signal)
         print(f"[{now}] {signal.signal} (confidence {signal.confidence}) — {signal.reason}")
     except Exception as exc:  # noqa: BLE001 — one bad tick must not kill the loop
         print(f"[{now}] ERROR: {exc}")

@@ -13,4 +13,4 @@ venv/
 
 # Logs / data
 *.log
-data/cache/
+data/

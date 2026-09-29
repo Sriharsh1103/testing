@@ -1,3 +1,4 @@
+import csv
 import os
 import sys
 from pathlib import Path
@@ -11,10 +12,14 @@ sys.path.insert(0, str(ROOT))
 from app.config import env_file_for, load_config  # noqa: E402
 from app.constants import ENVS, PHASES, REQUIRED_KEYS, OPTIONAL_KEYS  # noqa: E402
 from app.data.service import get_candles  # noqa: E402
+from app.decision.models import TradeSignal  # noqa: E402
 from app.decision.service import get_trade_signal  # noqa: E402
 from app.helpers import mask_secret  # noqa: E402
 from app.news.service import get_headlines  # noqa: E402
 from app.patterns.engine import analyze  # noqa: E402
+from app.output.csv_store import DEFAULT_PATH as SIGNALS_CSV_PATH  # noqa: E402
+from app.output.formatting import format_message  # noqa: E402
+from app.output.telegram_notifier import send_message  # noqa: E402
 from app.scheduler.session import is_active_session  # noqa: E402
 
 st.set_page_config(page_title="Gold Signal System — Setup", layout="centered")
@@ -126,6 +131,30 @@ try:
     st.caption("Run the actual loop separately: `python -m app.scheduler.runner " + active_env + "`")
 except Exception as exc:  # noqa: BLE001
     st.error(f"Could not read scheduler config: {exc}")
+
+st.subheader("Phase 6 — Output & logging")
+
+if SIGNALS_CSV_PATH.exists():
+    with SIGNALS_CSV_PATH.open(newline="", encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    st.caption(f"Signal log: `{SIGNALS_CSV_PATH}` ({len(rows)} rows)")
+    st.dataframe(rows[-10:], use_container_width=True)
+else:
+    st.caption("No signals logged yet — signals are appended here once Phase 4/5 run.")
+
+if st.button("Send test Telegram message"):
+    try:
+        _cfg = load_config(active_env)
+        bot_token = _cfg["TELEGRAM_BOT_TOKEN"]
+        chat_id = _cfg["TELEGRAM_CHAT_ID"]
+        if not bot_token or not chat_id:
+            st.warning("TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID not set — nothing to test.")
+        else:
+            test_signal = TradeSignal(signal="HOLD", confidence=50, reason="Dashboard test message.")
+            send_message(bot_token, chat_id, format_message(test_signal, _cfg["SYMBOL"]))
+            st.success("Sent — check your Telegram chat.")
+    except Exception as exc:  # noqa: BLE001
+        st.error(f"Could not send Telegram message: {exc}")
 
 st.subheader("Roadmap")
 for phase, desc, status in PHASES:

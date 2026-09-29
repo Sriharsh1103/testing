@@ -21,5 +21,5 @@ PHASES = [
     ("Phase 3", "News Ingestion (Finnhub)", "done"),
     ("Phase 4", "Claude Decision Layer", "pending"),
     ("Phase 5", "Scheduler", "pending"),
-    ("Phase 6", "Output & Logging (Telegram/console)", "pending"),
+    ("Phase 6", "Output & Logging (Telegram/console)", "done"),
 ]
